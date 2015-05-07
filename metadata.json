@@ -1,0 +1,16 @@
+{
+  "author": "Gouvernement du Québec",
+  "dependencies":
+  [
+    { "name": "puppetlabs/apache", "version_requirement": ">=0.0.0" }
+  ],
+  "license": "LiLiQ-R+",
+  "name": "gouvqc-igo",
+  "operatingsystem_support": [],
+  "project_page": "",
+  "requirements": [],
+  "source": "git@gitlab.forge.gouv.qc.ca:puppet/igo.git",
+  "summary": "Install and setup IGO-Navigator server",
+  "tags": ["igo", "gis"],
+  "version": "0.1.0"
+}
