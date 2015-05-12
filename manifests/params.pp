@@ -2,6 +2,8 @@
 
 class igo::params {
 
+  $usedByVagrant    = false
+
   $igoRootPath      = '/var/igo'
 
   $databaseName     = 'igo'
@@ -21,5 +23,5 @@ class igo::params {
   $srcPath          = '/usr/src'
 
   # TODO: Change to official librairie git depot when it will be available.
-  $gitRepo          = 'https://gitlab.forge.gouv.qc.ca/simon.tremblay/librairie.git'
+  $librairieGitRepo = 'https://gitlab.forge.gouv.qc.ca/simon.tremblay/librairie.git'
 }

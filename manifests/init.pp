@@ -11,7 +11,7 @@
 # class { 'igo': }
 #
 class igo(
-
+  $usedByVagrant    = $::igo::params::usedByVagrant,
   $igoRootPath      = $::igo::params::igoRootPath,
   $databaseName     = $::igo::params::databaseName,
   $databaseUser     = $::igo::params::databaseUser,
@@ -22,7 +22,7 @@ class igo(
   $cphalconVersion  = $::igo::params::cphalconVersion,
   $pgsqlScriptPath  = $::igo::params::pgsqlScriptPath,
   $phpiniPath       = $::igo::params::phpiniPath,
-  $gitRepo          = $::igo::params::gitRepo,
+  $librairieGitRepo = $::igo::params::librairieGitRepo,
   $pgUser           = $::igo::params::pgUser
 
 ) inherits ::igo::params {
@@ -30,15 +30,28 @@ class igo(
   $igoAppPath = "${igoRootPath}/igo"
   $execPath   = [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ]
 
-  file { "$igoAppPath":
-    ensure  => 'link',
-    target  => '/vagrant',
-    force   => true,
-    require => File[$igoRootPath]
+  if $usedByVagrant == true {
+    file { "$igoAppPath":
+      ensure  => 'link',
+      target  => '/vagrant',
+      force   => true,
+      require => File[$igoRootPath]
+    }
   }
+  else {
+    vcsrepo { "$igoAppPath":
+      ensure   => present,
+      provider => git,
+      source   => 'https://github.com/infra-geo-ouverte/igo.git',
+      require  => Package['git'],
+    }
+  }
+
   file { "$igoRootPath":
     ensure => 'directory',
-    force  => true,
+    owner  => $appUser,
+    group  => $appGroup,
+    mode   => '0775',
   }
   class { '::igo::apache':
     igoRootPath => $igoRootPath,
@@ -124,7 +137,7 @@ class igo(
   vcsrepo { "${igoRootPath}/librairie":
     ensure   => present,
     provider => git,
-    source   => $gitRepo,
+    source   => $librairieGitRepo,
     depth    => 1,
     require  => [
       Package['git'],
@@ -132,7 +145,7 @@ class igo(
       File[$igoRootPath],
     ],
   }
-  # FIXME: what creates subdirs interfaces/navigateur/app, pilotage, config?
+
   file { "${igoAppPath}/interfaces/navigateur/app/cache":
     owner   => $appUser,
     group   => $appGroup,
