@@ -19,7 +19,6 @@ class igo::params {
 
   # TODO: File path change depends on OS.
   $pgsqlScriptPath  = '/usr/share/postgresql/9.3/contrib/postgis-2.1'
-  $phpiniPath       = '/etc/php5/apache2/conf.d'
   $srcPath          = '/usr/src'
 
   # TODO: Change to official librairie git depot when it will be available.

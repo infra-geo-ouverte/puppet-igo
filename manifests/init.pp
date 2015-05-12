@@ -21,7 +21,6 @@ class igo(
   $mapserverVersion = $::igo::params::mapserVerversion,
   $cphalconVersion  = $::igo::params::cphalconVersion,
   $pgsqlScriptPath  = $::igo::params::pgsqlScriptPath,
-  $phpiniPath       = $::igo::params::phpiniPath,
   $librairieGitRepo = $::igo::params::librairieGitRepo,
   $pgUser           = $::igo::params::pgUser
 
@@ -126,16 +125,12 @@ class igo(
       Class['php::devel'],
     ],
   }
-  # FIXME: use php class to do this?
-  file { "${phpiniPath}/30-phalcon.ini":
-    content => 'extension=phalcon.so',
-    require => [
-      Class['php'],
-      Class['apache'],
-      Exec['installAndBuild-cphalcon'],
-    ],
-    notify  => Class['apache::service'],
+
+  php::ini { 'createPHPiniPhalcon':
+    target => '30-phalcon.ini',
+    value  => 'extension=phalcon.so',
   }
+
   vcsrepo { "${igoRootPath}/librairie":
     ensure   => present,
     provider => git,
