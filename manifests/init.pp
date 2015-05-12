@@ -61,16 +61,18 @@ class igo(
   }
   class { 'php': 
   }
-  class { 'php::dev':
+  class { 'php::devel':
   }
-  class { 'php::extension::curl':
+
+  php::module { "curl":
   }
-  class { 'php::extension::intl':
+  php::module { "intl":
   }
-  class { 'php::extension::mapscript':
+  php::module { "mapscript":
   }
-  class { 'php::extension::pgsql':
+  php::module { "pgsql":
   }
+
   # TODO: check for other distribution names
   package { [ 'cgi-mapserver', 'mapserver-bin' ]:
     ensure => $mapserverVersion,
@@ -121,7 +123,7 @@ class igo(
     path    => $execPath,
     require => [
       Vcsrepo["${srcPath}/cphalcon"],
-      Class['php::dev'],
+      Class['php::devel'],
     ],
   }
   # FIXME: use php class to do this?
