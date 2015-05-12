@@ -2,7 +2,10 @@
   "author": "Gouvernement du Québec",
   "dependencies":
   [
-    { "name": "puppetlabs/apache", "version_requirement": ">=0.0.0" }
+    { "name": "puppetlabs/apache", "version_requirement": ">=1.4.1" },
+    { "name": "example42/php", "version_requirement": ">=2.0.20" },
+    { "name": "puppetlabs/postgresql", "version_requirement": ">=4.3.0" },
+    { "name": "puppetlabs/vcsrepo", "version_requirement": ">=1.2.0" }
   ],
   "license": "LiLiQ-R+",
   "name": "gouvqc-igo",
