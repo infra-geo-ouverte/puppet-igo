@@ -37,6 +37,8 @@ class igo(
       force   => true,
       require => File[$igoRootPath]
     }
+
+    $requiredIgoAppPath = File["$igoAppPath"]
   }
   else {
     vcsrepo { "$igoAppPath":
@@ -45,6 +47,8 @@ class igo(
       source   => "$igoGitRepo",
       require  => Package['git'],
     }
+
+    $requiredIgoAppPath = Vcsrepo["$igoAppPath"]
   }
 
   file { "$igoRootPath":
@@ -148,18 +152,18 @@ class igo(
     owner   => $appUser,
     group   => $appGroup,
     mode    => '0775',
-    require => File["$igoAppPath"],
+    require => "$requiredIgoAppPath",
   }
   file { "${igoAppPath}/pilotage/app/cache":
     owner   => $appUser,
     group   => $appGroup,
     mode    => '0775',
-    require => File["$igoAppPath"],
+    require => "$requiredIgoAppPath",
   }
   file { "${igoAppPath}/config/config.php":
     owner   => $appUser,
     group   => $appGroup,
     content => template("igo/config.php.erb"),
-    require => File["$igoAppPath"],
+    require => "$requiredIgoAppPath",
   }
 }
