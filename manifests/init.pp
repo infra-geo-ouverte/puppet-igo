@@ -11,158 +11,159 @@
 # class { 'igo': }
 #
 class igo(
+  $usedByVagrant    = $::igo::params::usedByVagrant,
   $igoRootPath      = $::igo::params::igoRootPath,
   $databaseName     = $::igo::params::databaseName,
   $databaseUser     = $::igo::params::databaseUser,
   $databasePassword = $::igo::params::databasePassword,
   $appUser          = $::igo::params::appUser,
-  $appGroup         = $::igo::params::appGroup
+  $appGroup         = $::igo::params::appGroup,
+  $mapserverVersion = $::igo::params::mapserVerversion,
+  $cphalconVersion  = $::igo::params::cphalconVersion,
+  $pgsqlScriptPath  = $::igo::params::pgsqlScriptPath,
+  $librairieGitRepo = $::igo::params::librairieGitRepo,
+  $igoGitRepo       = $::igo::params::igoGitRepo,
+  $pgUser           = $::igo::params::pgUser
+
 ) inherits ::igo::params {
 
-  # FIXME: File path change depends on OS.
-  $pgsqlScriptPath = '/usr/share/postgresql/9.3/contrib/postgis-2.1'
-
   $igoAppPath = "${igoRootPath}/igo"
+  $execPath   = [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ]
 
+  if $usedByVagrant == true {
+    file { "$igoAppPath":
+      ensure  => 'link',
+      target  => '/vagrant',
+      force   => true,
+      require => File[$igoRootPath]
+    }
+
+    $requiredIgoAppPath = File["$igoAppPath"]
+  }
+  else {
+    vcsrepo { "$igoAppPath":
+      ensure   => present,
+      provider => git,
+      source   => "$igoGitRepo",
+      require  => Package['git'],
+    }
+
+    $requiredIgoAppPath = Vcsrepo["$igoAppPath"]
+  }
+
+  file { "$igoRootPath":
+    ensure => 'directory',
+    owner  => $appUser,
+    group  => $appGroup,
+    mode   => '0775',
+  }
   class { '::igo::apache':
     igoRootPath => $igoRootPath,
     igoAppPath  => $igoAppPath,
     appUser     => $appUser,
     appGroup    => $appGroup
   }
-
-  file { $igoAppPath:
-    ensure  => 'link',
-    target  => '/vagrant',
-    force   => true,
-    require => File[$igoRootPath]
+  class { 'php': 
+  }
+  class { 'php::devel':
   }
 
-  file { $igoRootPath:
-    ensure => 'directory',
-    force  => true
+  php::module { "curl":
+  }
+  php::module { "intl":
+  }
+  php::module { "mapscript":
+  }
+  php::module { "pgsql":
   }
 
-  package {'cgi-mapserver':
-    ensure => '6.4.1-2'
+  # TODO: check for other distribution names
+  package { [ 'cgi-mapserver', 'mapserver-bin' ]:
+    ensure => $mapserverVersion,
   }
-
-  package {'mapserver-bin':
-    ensure => '6.4.1-2'
+  package { [ 'gdal-bin', 'gcc', 'make', 'libpcre3-dev', 'git' ]:
+    ensure => present,
   }
-
-  package {'gdal-bin': }
-
-  package {'gcc': }
-  package {'make': }
-  package {'libpcre3-dev': }
-
-  package {'git': }
-
-  class { 'php': }
-  class { 'php::dev': }
-
-  class { 'php::extension::curl': }
-  class { 'php::extension::intl': }
-  class { 'php::extension::mapscript': }
-  class { 'php::extension::pgsql': }
-
-  class { 'postgresql::server': }
-
-  class {'postgresql::server::postgis':}
-
-  postgresql::server::db { $databaseName:
+  class { 'postgresql::server': 
+  }
+  class { 'postgresql::server::postgis':
+  }
+  postgresql::server::db { "$databaseName":
     user     => $databaseUser,
     password => $databasePassword,
   }
-
   postgresql::server::extension { 'plpgsql':
     database => $databaseName,
-    ensure => present
+    ensure   => present,
   }
-
-  exec { "psql-postgis":
+  exec { 'psql-postgis':
     command => "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis.sql",
-    path => "/usr/bin",
-    user => 'postgres',
-    require => Postgresql::Server::Extension['plpgsql']
+    path    => $execPath,
+    user    => $pgUser,
+    require => Postgresql::Server::Extension['plpgsql'],
   }
-
-  exec { "psql-postgis_comments":
+  exec { 'psql-postgis_comments':
     command => "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis_comments.sql",
-    path => "/usr/bin",
-    user => 'postgres',
-    require => Exec['psql-postgis']
+    path    => $execPath,
+    user    => $pgUser,
+    require => Exec['psql-postgis'],
   }
-
   exec { "psql-spatial_ref_sys":
     command => "psql -d ${databaseName} -f ${pgsqlScriptPath}/spatial_ref_sys.sql",
-    path => "/usr/bin",
-    user => 'postgres',
-    require => Exec['psql-postgis_comments']
+    path    => $execPath,
+    user    => $pgUser,
+    require => Exec['psql-postgis_comments'],
   }
-
-  vcsrepo { '/var/tmp/cphalcon':
+  vcsrepo { "${srcPath}/cphalcon":
     ensure   => present,
     provider => git,
     source   => 'https://github.com/phalcon/cphalcon.git',
-    revision => 'phalcon-v1.3.1',
-    require  => Package['git']
+    revision => "phalcon-${cphalconVersion}",
+    require  => Package['git'],
   }
-
   exec { 'installAndBuild-cphalcon':
     command => "./install",
-    cwd => '/var/tmp/cphalcon/build',
-    path => ['/usr/bin', '/bin'],
+    cwd     => "${srcPath}/cphalcon/build",
+    path    => $execPath,
     require => [
-                 Vcsrepo['/var/tmp/cphalcon'],
-                 Class['php::dev']
-               ]
+      Vcsrepo["${srcPath}/cphalcon"],
+      Class['php::devel'],
+    ],
   }
 
-  # FIXME: File path change depends on OS.
-  file { '/etc/php5/apache2/conf.d/30-phalcon.ini':
-    content => 'extension=phalcon.so',
-    require => [
-                 Class['php'],
-                 Class['apache'],
-                 Exec['installAndBuild-cphalcon']
-               ],
-    notify => Class['apache::service']
+  php::ini { 'createPHPiniPhalcon':
+    target => '30-phalcon.ini',
+    value  => 'extension=phalcon.so',
   }
 
-  # TODO: Change to official librairie git depot when it will be available.
   vcsrepo { "${igoRootPath}/librairie":
     ensure   => present,
     provider => git,
-    source   => 'https://gitlab.forge.gouv.qc.ca/simon.tremblay/librairie.git',
+    source   => $librairieGitRepo,
     depth    => 1,
-    require => [
-                 Package['git'],
-                 Class['apache'],
-                 File[$igoRootPath]
-               ]
+    require  => [
+      Package['git'],
+      Class['apache'],
+      File[$igoRootPath],
+    ],
   }
 
   file { "${igoAppPath}/interfaces/navigateur/app/cache":
-    owner => $appUser,
-    group => $appGroup,
-    mode => '0775',
-    require => File[$igoAppPath]
+    owner   => $appUser,
+    group   => $appGroup,
+    mode    => '0775',
+    require => "$requiredIgoAppPath",
   }
-
   file { "${igoAppPath}/pilotage/app/cache":
-    owner => $appUser,
-    group => $appGroup,
-    mode => '0775',
-    require => File[$igoAppPath]
+    owner   => $appUser,
+    group   => $appGroup,
+    mode    => '0775',
+    require => "$requiredIgoAppPath",
   }
-
-  file {"${igoAppPath}/config/config.php":
-    owner => $appUser,
-    group => $appGroup,
+  file { "${igoAppPath}/config/config.php":
+    owner   => $appUser,
+    group   => $appGroup,
     content => template("igo/config.php.erb"),
-    require => File[$igoAppPath]
+    require => "$requiredIgoAppPath",
   }
-
 }
