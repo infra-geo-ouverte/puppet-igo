@@ -23,4 +23,6 @@ class igo::params {
 
   # TODO: Change to official librairie git depot when it will be available.
   $librairieGitRepo = 'https://gitlab.forge.gouv.qc.ca/simon.tremblay/librairie.git'
+
+  $igoGitRepo = 'https://github.com/infra-geo-ouverte/igo.git'
 }

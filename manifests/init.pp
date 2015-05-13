@@ -22,6 +22,7 @@ class igo(
   $cphalconVersion  = $::igo::params::cphalconVersion,
   $pgsqlScriptPath  = $::igo::params::pgsqlScriptPath,
   $librairieGitRepo = $::igo::params::librairieGitRepo,
+  $igoGitRepo       = $::igo::params::igoGitRepo,
   $pgUser           = $::igo::params::pgUser
 
 ) inherits ::igo::params {
@@ -41,7 +42,7 @@ class igo(
     vcsrepo { "$igoAppPath":
       ensure   => present,
       provider => git,
-      source   => 'https://github.com/infra-geo-ouverte/igo.git',
+      source   => "$igoGitRepo",
       require  => Package['git'],
     }
   }
