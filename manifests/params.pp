@@ -21,8 +21,7 @@ class igo::params {
   $pgsqlScriptPath  = '/usr/share/postgresql/9.3/contrib/postgis-2.1'
   $srcPath          = '/usr/src'
 
-  # TODO: Change to official librairie git depot when it will be available.
-  $librairieGitRepo = 'https://gitlab.forge.gouv.qc.ca/simon.tremblay/librairie.git'
+  $librairieGitRepo = 'https://github.com/infra-geo-ouverte/igo-lib.git'
 
   $igoGitRepo = 'https://github.com/infra-geo-ouverte/igo.git'
 }
