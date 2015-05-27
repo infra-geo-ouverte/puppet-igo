@@ -152,27 +152,27 @@ class igo (
     ensure   => present,
   }
   exec { 'psql-postgis':
-    command => "
-      psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis.sql && \
-      touch ${pgsqlScriptPath}/psql-postgis.done",
+    command => 
+      "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis.sql && \
+       touch ${pgsqlScriptPath}/psql-postgis.done",
     path    => $execPath,
     user    => $pgUser,
     creates => "${pgsqlScriptPath}/psql-postgis.done",
     require => Postgresql::Server::Extension['plpgsql'],
   }
   exec { 'psql-postgis_comments':
-    command => "
-      psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis_comments.sql && \
-      touch ${pgsqlScriptPath}/psql-postgis_comments.done",
+    command => 
+      "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis_comments.sql && \
+       touch ${pgsqlScriptPath}/psql-postgis_comments.done",
     path    => $execPath,
     user    => $pgUser,
     creates => "${pgsqlScriptPath}/psql-postgis_comments.done",
     require => Exec['psql-postgis'],
   }
   exec { "psql-spatial_ref_sys":
-    command => "
-      psql -d ${databaseName} -f ${pgsqlScriptPath}/spatial_ref_sys.sql && \
-      touch ${pgsqlScriptPath}/psql-spatial_ref_sys.done",
+    command => 
+      "psql -d ${databaseName} -f ${pgsqlScriptPath}/spatial_ref_sys.sql && \
+       touch ${pgsqlScriptPath}/psql-spatial_ref_sys.done",
     path    => $execPath,
     user    => $pgUser,
     creates => "${pgsqlScriptPath}/psql-spatial_ref_sys.done",
