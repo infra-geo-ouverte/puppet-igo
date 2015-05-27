@@ -17,7 +17,7 @@ class igo (
   $databaseName     = $::igo::params::databaseName,
   $databaseUser     = $::igo::params::databaseUser,
   $databasePassword = $::igo::params::databasePassword,
-  $pgUser           = $::igo::params::pgUser
+  $pgUser           = $::igo::params::pgUser,
   $appUser          = $::igo::params::appUser,
   $appGroup         = $::igo::params::appGroup,
   $pgsqlScriptPath  = $::igo::params::pgsqlScriptPath,
