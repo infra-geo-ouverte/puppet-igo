@@ -10,26 +10,39 @@
 #
 # class { 'igo': }
 #
-class igo(
+class igo (
+
   $usedByVagrant    = $::igo::params::usedByVagrant,
   $igoRootPath      = $::igo::params::igoRootPath,
   $databaseName     = $::igo::params::databaseName,
   $databaseUser     = $::igo::params::databaseUser,
   $databasePassword = $::igo::params::databasePassword,
+  $pgUser           = $::igo::params::pgUser
   $appUser          = $::igo::params::appUser,
   $appGroup         = $::igo::params::appGroup,
-  $mapserverVersion = $::igo::params::mapserVerversion,
-  $cphalconVersion  = $::igo::params::cphalconVersion,
   $pgsqlScriptPath  = $::igo::params::pgsqlScriptPath,
-  $librairieGitRepo = $::igo::params::librairieGitRepo,
+  $mapserverVersion = $::igo::params::mapserVerversion,
   $igoGitRepo       = $::igo::params::igoGitRepo,
-  $pgUser           = $::igo::params::pgUser
+  $igoVersion       = $::igo::params::igoVersion,
+  $librairieGitRepo = $::igo::params::librairieGitRepo,
+  $librairieVersion = $::igo::params::librairieVersion,
+  $cphalconGitRepo  = $::igo::params::cphalconGitRepo,
+  $cphalconVersion  = $::igo::params::cphalconVersion,
 
 ) inherits ::igo::params {
 
   $igoAppPath = "${igoRootPath}/igo"
   $execPath   = [ '/bin/', '/sbin/' , '/usr/bin/', '/usr/sbin/' ]
 
+  package { 'git':
+    ensure => present,
+  }
+  file { "$igoRootPath":
+    ensure => 'directory',
+    owner  => $appUser,
+    group  => $appGroup,
+    mode   => '0775',
+  }
   if $usedByVagrant == true {
     file { "$igoAppPath":
       ensure  => 'link',
@@ -37,25 +50,47 @@ class igo(
       force   => true,
       require => File[$igoRootPath]
     }
-
     $requiredIgoAppPath = File["$igoAppPath"]
-  }
-  else {
+  } else {
     vcsrepo { "$igoAppPath":
       ensure   => present,
       provider => git,
-      source   => "$igoGitRepo",
-      require  => Package['git'],
+      source   => $igoGitRepo,
+      revision => $igoVersion,
+      require  => [
+        Package['git'],
+        File[$igoRootPath],
+      ],
     }
-
     $requiredIgoAppPath = Vcsrepo["$igoAppPath"]
   }
-
-  file { "$igoRootPath":
-    ensure => 'directory',
-    owner  => $appUser,
-    group  => $appGroup,
-    mode   => '0775',
+  vcsrepo { "${igoRootPath}/librairie":
+    ensure   => present,
+    provider => git,
+    source   => $librairieGitRepo,
+    depth    => 1,
+    require  => [
+      Package['git'],
+      File[$igoRootPath],
+    ],
+  }
+  file { "${igoAppPath}/interfaces/navigateur/app/cache":
+    owner   => $appUser,
+    group   => $appGroup,
+    mode    => '0775',
+    require => $requiredIgoAppPath,
+  }
+  file { "${igoAppPath}/pilotage/app/cache":
+    owner   => $appUser,
+    group   => $appGroup,
+    mode    => '0775',
+    require => $requiredIgoAppPath,
+  }
+  file { "${igoAppPath}/config/config.php":
+    owner   => $appUser,
+    group   => $appGroup,
+    content => template('igo/config.php.erb'),
+    require => $requiredIgoAppPath,
   }
   class { '::igo::apache':
     igoRootPath => $igoRootPath,
@@ -63,28 +98,47 @@ class igo(
     appUser     => $appUser,
     appGroup    => $appGroup
   }
-  class { 'php': 
+  class { 'php':
   }
   class { 'php::devel':
   }
-
-  php::module { "curl":
+  php::module { 'curl':
   }
-  php::module { "intl":
+  php::module { 'intl':
   }
-  php::module { "mapscript":
+  php::module { 'mapscript':
   }
-  php::module { "pgsql":
+  php::module { 'pgsql':
   }
-
   # TODO: check for other distribution names
   package { [ 'cgi-mapserver', 'mapserver-bin' ]:
     ensure => $mapserverVersion,
   }
-  package { [ 'gdal-bin', 'gcc', 'make', 'libpcre3-dev', 'git' ]:
+  package { [ 'gdal-bin', 'gcc', 'make', 'libpcre3-dev', ]:
     ensure => present,
   }
-  class { 'postgresql::server': 
+  vcsrepo { "${srcPath}/cphalcon":
+    ensure   => present,
+    provider => git,
+    source   => 'https://github.com/phalcon/cphalcon.git',
+    revision => "phalcon-${cphalconVersion}",
+    require  => Package['git'],
+  }
+  exec { 'installAndBuild-cphalcon':
+    command => "./install",
+    cwd     => "${srcPath}/cphalcon/build",
+    path    => $execPath,
+    require => [
+      Vcsrepo["${srcPath}/cphalcon"],
+      Class['php::devel'],
+    ],
+  }
+  php::ini { 'createPHPiniPhalcon':
+    target  => '30-phalcon.ini',
+    value   => 'extension=phalcon.so',
+    require => Exec['installAndBuild-cphalcon'],
+  }
+  class { 'postgresql::server':
   }
   class { 'postgresql::server::postgis':
   }
@@ -113,57 +167,5 @@ class igo(
     path    => $execPath,
     user    => $pgUser,
     require => Exec['psql-postgis_comments'],
-  }
-  vcsrepo { "${srcPath}/cphalcon":
-    ensure   => present,
-    provider => git,
-    source   => 'https://github.com/phalcon/cphalcon.git',
-    revision => "phalcon-${cphalconVersion}",
-    require  => Package['git'],
-  }
-  exec { 'installAndBuild-cphalcon':
-    command => "./install",
-    cwd     => "${srcPath}/cphalcon/build",
-    path    => $execPath,
-    require => [
-      Vcsrepo["${srcPath}/cphalcon"],
-      Class['php::devel'],
-    ],
-  }
-
-  php::ini { 'createPHPiniPhalcon':
-    target => '30-phalcon.ini',
-    value  => 'extension=phalcon.so',
-  }
-
-  vcsrepo { "${igoRootPath}/librairie":
-    ensure   => present,
-    provider => git,
-    source   => $librairieGitRepo,
-    depth    => 1,
-    require  => [
-      Package['git'],
-      Class['apache'],
-      File[$igoRootPath],
-    ],
-  }
-
-  file { "${igoAppPath}/interfaces/navigateur/app/cache":
-    owner   => $appUser,
-    group   => $appGroup,
-    mode    => '0775',
-    require => "$requiredIgoAppPath",
-  }
-  file { "${igoAppPath}/pilotage/app/cache":
-    owner   => $appUser,
-    group   => $appGroup,
-    mode    => '0775',
-    require => "$requiredIgoAppPath",
-  }
-  file { "${igoAppPath}/config/config.php":
-    owner   => $appUser,
-    group   => $appGroup,
-    content => template("igo/config.php.erb"),
-    require => "$requiredIgoAppPath",
   }
 }
