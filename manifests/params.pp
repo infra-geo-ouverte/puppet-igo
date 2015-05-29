@@ -2,6 +2,8 @@
 
 class igo::params {
 
+  include ::postgresql::globals
+
   $usedByVagrant    = false
 
   $igoRootPath      = '/var/igo'
@@ -15,13 +17,18 @@ class igo::params {
   $appGroup         = 'vagrant'
 
   $mapserverVersion = '6.4.1-2'
-  $cphalconVersion  = 'v1.3.1'
 
-  # TODO: File path change depends on OS.
-  $pgsqlScriptPath  = '/usr/share/postgresql/9.3/contrib/postgis-2.1'
+  $igoGitRepo       = 'https://github.com/infra-geo-ouverte/igo.git'
+  $igoVersion       = 'master'
+  
+  $librairieGitRepo = 'https://github.com/infra-geo-ouverte/igo-lib.git'
+  $librairieVersion = 'master'
+
+  $cphalconGitRepo  = 'https://github.com/phalcon/cphalcon.git'
+  $cphalconVersion  = 'v1.3.1'
+  
+  $pgsqlEtcPath     = "/etc/postgresql/${::postgresql::globals::default_version}"
+  $pgsqlScriptPath  = "/usr/share/postgresql/${::postgresql::globals::default_version}/contrib/postgis-${::postgresql::globals::default_postgis_version}"
   $srcPath          = '/usr/src'
 
-  $librairieGitRepo = 'https://github.com/infra-geo-ouverte/igo-lib.git'
-
-  $igoGitRepo = 'https://github.com/infra-geo-ouverte/igo.git'
 }
