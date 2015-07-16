@@ -28,7 +28,7 @@ class igo (
   $librairieVersion = $::igo::params::librairieVersion,
   $cphalconGitRepo  = $::igo::params::cphalconGitRepo,
   $cphalconVersion  = $::igo::params::cphalconVersion,
-  $config_template  = $::igo::params::configTemplate,
+  $configTemplate   = $::igo::params::configTemplate,
 
 ) inherits ::igo::params {
 
