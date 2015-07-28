@@ -30,5 +30,7 @@ class igo::params {
   $pgsqlEtcPath     = "/etc/postgresql/${::postgresql::globals::default_version}"
   $pgsqlScriptPath  = "/usr/share/postgresql/${::postgresql::globals::default_version}/contrib/postgis-${::postgresql::globals::default_postgis_version}"
   $srcPath          = '/usr/src'
+  
+  $configTemplate   = 'igo/config.php.erb'
 
 }

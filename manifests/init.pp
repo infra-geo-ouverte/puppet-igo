@@ -28,6 +28,7 @@ class igo (
   $librairieVersion = $::igo::params::librairieVersion,
   $cphalconGitRepo  = $::igo::params::cphalconGitRepo,
   $cphalconVersion  = $::igo::params::cphalconVersion,
+  $configTemplate   = $::igo::params::configTemplate,
 
 ) inherits ::igo::params {
 
@@ -89,7 +90,7 @@ class igo (
   file { "${igoAppPath}/config/config.php":
     owner   => $appUser,
     group   => $appGroup,
-    content => template('igo/config.php.erb'),
+    content => template($configTemplate),
     require => $requiredIgoAppPath,
   }
   class { '::igo::apache':
