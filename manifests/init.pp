@@ -65,7 +65,7 @@ class igo (
     }
     $requiredIgoAppPath = Vcsrepo["$igoAppPath"]
   }
-  vcsrepo { "${igoRootPath}/librairie":
+  vcsrepo { "${igoAppPath}/librairie":
     ensure   => present,
     provider => git,
     source   => $librairieGitRepo,
