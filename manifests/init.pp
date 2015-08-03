@@ -90,7 +90,7 @@ class igo (
   file { "${igoAppPath}/config/config.php":
     owner   => $appUser,
     group   => $appGroup,
-    content => template($configTemplate),
+    source  => "${igoAppPath}/config/config.exempleSimple.php",
     require => $requiredIgoAppPath,
   }
   class { '::igo::apache':
@@ -153,7 +153,7 @@ class igo (
     ensure   => present,
   }
   exec { 'psql-postgis':
-    command => 
+    command =>
       "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis.sql && \
        touch ${pgsqlEtcPath}/psql-postgis.done",
     path    => $execPath,
@@ -162,7 +162,7 @@ class igo (
     require => Postgresql::Server::Extension['plpgsql'],
   }
   exec { 'psql-postgis_comments':
-    command => 
+    command =>
       "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis_comments.sql && \
        touch ${pgsqlEtcPath}/psql-postgis_comments.done",
     path    => $execPath,
@@ -171,7 +171,7 @@ class igo (
     require => Exec['psql-postgis'],
   }
   exec { "psql-spatial_ref_sys":
-    command => 
+    command =>
       "psql -d ${databaseName} -f ${pgsqlScriptPath}/spatial_ref_sys.sql && \
        touch ${pgsqlEtcPath}/psql-spatial_ref_sys.done",
     path    => $execPath,
