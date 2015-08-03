@@ -20,26 +20,28 @@ class igo::apache (
   class { '::apache::mod::php':
   }
   apache::vhost { 'igo':
-    vhost_name              => '*',
-    port                    => '80',
-    docroot                 => $igoRootPath,
-    docroot_owner           => $appUser,
-    docroot_group           => $appGroup,
-    aliases                 => [
-      { alias               => '/igo_navigateur/',
-        path                => "${igoAppPath}/interfaces/navigateur/",
-      },
-      { alias               => '/api/',
-        path                => "${igoAppPath}/interfaces/navigateur/api/",
-      },
-    ],
-    directories             => [
+    vhost_name    => '*',
+    port          => '80',
+    docroot       => $igoRootPath,
+    docroot_owner => $appUser,
+    docroot_group => $appGroup,
+    aliases       => [
       {
-        path                => "${igoAppPath}/interfaces/navigateur/",
-        provider            => 'directory',
-        rewrites            => [
-          { rewrite_rule    => [ '^$ public/    [L]' ] },
-          { rewrite_rule    => [ '(.*) public/$1 [L]' ] },
+        alias => '/igo_navigateur/',
+        path  => "${igoAppPath}/interfaces/navigateur/" },
+      {
+        alias => '/api/',
+        path  => "${igoAppPath}/interfaces/navigateur/api/" },
+    ],
+    directories   => [
+      {
+        path     => "${igoAppPath}/interfaces/navigateur/",
+        provider => 'directory',
+        rewrites => [
+          {
+            rewrite_rule => [ '^$ public/    [L]' ] },
+          {
+            rewrite_rule => [ '(.*) public/$1 [L]' ] },
         ],
       },
       {
@@ -47,17 +49,22 @@ class igo::apache (
         provider            => 'directory',
         add_default_charset => 'UTF-8',
         rewrites            => [
-          { rewrite_cond    => [ '%{REQUEST_FILENAME} !-d' ] },
-          { rewrite_cond    => [ '%{REQUEST_FILENAME} !-f' ] },
-          { rewrite_rule    => [ '^(.*)$ index.php?_url=/$1 [QSA,L]' ] },
+          {
+            rewrite_cond => [ '%{REQUEST_FILENAME} !-d' ] },
+          {
+            rewrite_cond => [ '%{REQUEST_FILENAME} !-f' ] },
+          {
+            rewrite_rule => [ '^(.*)$ index.php?_url=/$1 [QSA,L]' ] },
         ],
       },
       {
-        path                => "${igoAppPath}/interfaces/navigateur/api/",
-        provider            => 'directory',
-        rewrites            => [
-          { rewrite_cond    => [ '%{REQUEST_FILENAME} !-f' ] },
-          { rewrite_rule    => [ '^(.*)$ index.php?_url=/$1 [QSA,L]' ] },
+        path     => "${igoAppPath}/interfaces/navigateur/api/",
+        provider => 'directory',
+        rewrites => [
+          {
+            rewrite_cond => [ '%{REQUEST_FILENAME} !-f' ] },
+          {
+            rewrite_rule => [ '^(.*)$ index.php?_url=/$1 [QSA,L]' ] },
         ],
       },
     ],
