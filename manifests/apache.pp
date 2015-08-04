@@ -30,6 +30,9 @@ class igo::apache (
         alias => '/igo_navigateur/',
         path  => "${igoAppPath}/interfaces/navigateur/" },
       {
+        alias => '/navigateur/',
+        path  => "${igoAppPath}/interfaces/navigateur/" },
+      {
         alias => '/api/',
         path  => "${igoAppPath}/interfaces/navigateur/api/" },
     ],
