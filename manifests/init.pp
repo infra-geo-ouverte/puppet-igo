@@ -20,7 +20,6 @@ class igo (
   $pgUser           = $::igo::params::pgUser,
   $appUser          = $::igo::params::appUser,
   $appGroup         = $::igo::params::appGroup,
-  $pgsqlScriptPath  = $::igo::params::pgsqlScriptPath,
   $mapserverVersion = $::igo::params::mapserVerversion,
   $igoGitRepo       = $::igo::params::igoGitRepo,
   $igoVersion       = $::igo::params::igoVersion,
@@ -28,6 +27,9 @@ class igo (
   $librairieVersion = $::igo::params::librairieVersion,
   $cphalconGitRepo  = $::igo::params::cphalconGitRepo,
   $cphalconVersion  = $::igo::params::cphalconVersion,
+  $pgsqlEtcPath     = $::igo::params::pgsqlEtcPath,
+  $pgsqlScriptPath  = $::igo::params::pgsqlScriptPath,
+  $srcPath          = $::igo::params::srcPath,
   $configTemplate   = $::igo::params::configTemplate,
 
 ) inherits ::igo::params {
@@ -38,22 +40,22 @@ class igo (
   package { 'git':
     ensure => present,
   }
-  file { "$igoRootPath":
+  file { $igoRootPath:
     ensure => 'directory',
     owner  => $appUser,
     group  => $appGroup,
     mode   => '0775',
   }
   if $usedByVagrant == true {
-    file { "$igoAppPath":
+    file { $igoAppPath:
       ensure  => 'link',
       target  => '/vagrant',
       force   => true,
       require => File[$igoRootPath]
     }
-    $requiredIgoAppPath = File["$igoAppPath"]
+    $requiredIgoAppPath = File[$igoAppPath]
   } else {
-    vcsrepo { "$igoAppPath":
+    vcsrepo { $igoAppPath:
       ensure   => present,
       provider => git,
       source   => $igoGitRepo,
@@ -63,9 +65,9 @@ class igo (
         File[$igoRootPath],
       ],
     }
-    $requiredIgoAppPath = Vcsrepo["$igoAppPath"]
+    $requiredIgoAppPath = Vcsrepo[$igoAppPath]
   }
-  vcsrepo { "${igoRootPath}/librairie":
+  vcsrepo { "${igoAppPath}/librairie":
     ensure   => present,
     provider => git,
     source   => $librairieGitRepo,
@@ -87,11 +89,22 @@ class igo (
     mode    => '0775',
     require => $requiredIgoAppPath,
   }
-  file { "${igoAppPath}/config/config.php":
-    owner   => $appUser,
-    group   => $appGroup,
-    content => template($configTemplate),
-    require => $requiredIgoAppPath,
+  # Keep compatibility with users who want to use their own config template file.
+  if $configTemplate != '' {
+    file { "${igoAppPath}/config/config.php":
+      owner   => $appUser,
+      group   => $appGroup,
+      content => template($configTemplate),
+      require => $requiredIgoAppPath,
+    }
+  }
+  else {
+    file { "${igoAppPath}/config/config.php":
+      owner   => $appUser,
+      group   => $appGroup,
+      source  => "${igoAppPath}/config/config.exempleSimple.php",
+      require => $requiredIgoAppPath,
+    }
   }
   class { '::igo::apache':
     igoRootPath => $igoRootPath,
@@ -126,7 +139,7 @@ class igo (
     require  => Package['git'],
   }
   exec { 'installAndBuild-cphalcon':
-    command => "./install",
+    command => './install',
     cwd     => "${srcPath}/cphalcon/build",
     path    => $execPath,
     creates => '/usr/lib/php5/20121212/phalcon.so',
@@ -144,16 +157,16 @@ class igo (
   }
   class { 'postgresql::server::postgis':
   }
-  postgresql::server::db { "$databaseName":
+  postgresql::server::db { $databaseName:
     user     => $databaseUser,
     password => $databasePassword,
   }
   postgresql::server::extension { 'plpgsql':
-    database => $databaseName,
     ensure   => present,
+    database => $databaseName,
   }
   exec { 'psql-postgis':
-    command => 
+    command =>
       "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis.sql && \
        touch ${pgsqlEtcPath}/psql-postgis.done",
     path    => $execPath,
@@ -162,7 +175,7 @@ class igo (
     require => Postgresql::Server::Extension['plpgsql'],
   }
   exec { 'psql-postgis_comments':
-    command => 
+    command =>
       "psql -d ${databaseName} -f ${pgsqlScriptPath}/postgis_comments.sql && \
        touch ${pgsqlEtcPath}/psql-postgis_comments.done",
     path    => $execPath,
@@ -170,8 +183,8 @@ class igo (
     creates => "${pgsqlEtcPath}/psql-postgis_comments.done",
     require => Exec['psql-postgis'],
   }
-  exec { "psql-spatial_ref_sys":
-    command => 
+  exec { 'psql-spatial_ref_sys':
+    command =>
       "psql -d ${databaseName} -f ${pgsqlScriptPath}/spatial_ref_sys.sql && \
        touch ${pgsqlEtcPath}/psql-spatial_ref_sys.done",
     path    => $execPath,
