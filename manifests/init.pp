@@ -89,11 +89,22 @@ class igo (
     mode    => '0775',
     require => $requiredIgoAppPath,
   }
-  file { "${igoAppPath}/config/config.php":
-    owner   => $appUser,
-    group   => $appGroup,
-    source  => "${igoAppPath}/config/config.exempleSimple.php",
-    require => $requiredIgoAppPath,
+  # Keep compatibility with users who want to use their own config template file.
+  if $configTemplate != '' {
+    file { "${igoAppPath}/config/config.php":
+      owner   => $appUser,
+      group   => $appGroup,
+      content => template($configTemplate),
+      require => $requiredIgoAppPath,
+    }
+  }
+  else {
+    file { "${igoAppPath}/config/config.php":
+      owner   => $appUser,
+      group   => $appGroup,
+      source  => "${igoAppPath}/config/config.exempleSimple.php",
+      require => $requiredIgoAppPath,
+    }
   }
   class { '::igo::apache':
     igoRootPath => $igoRootPath,
