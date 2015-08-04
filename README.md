@@ -1,5 +1,5 @@
-#IGO
-
+#puppet-igo
+[![Build Status](https://travis-ci.org/infra-geo-ouverte/puppet-igo.svg)](https://travis-ci.org/infra-geo-ouverte/puppet-igo)
 ####Table of Contents
 
 1. [Overview - What is the IGO module?](#overview)
