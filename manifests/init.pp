@@ -51,7 +51,8 @@ class igo (
       ensure  => 'link',
       target  => '/vagrant',
       force   => true,
-      require => File[$igoRootPath]
+      require => File[$igoRootPath],
+      before  => Vcsrepo["${igoAppPath}/librairie"],
     }
     $requiredIgoAppPath = File[$igoAppPath]
   } else {
@@ -64,6 +65,7 @@ class igo (
         Package['git'],
         File[$igoRootPath],
       ],
+      before   => Vcsrepo["${igoAppPath}/librairie"],
     }
     $requiredIgoAppPath = Vcsrepo[$igoAppPath]
   }
